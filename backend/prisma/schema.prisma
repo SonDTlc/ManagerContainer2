@@ -76,6 +76,301 @@ model AuditLog {
 	@@index([action, createdAt])
 }
 
+model ServiceRequest {
+    id            String   @id @default(cuid())
+    tenant_id     String?
+    created_by    String
+    type          String   // IMPORT | EXPORT | CONVERT
+    container_no  String
+    eta           DateTime?
+    status        String   // PENDING | RECEIVED | REJECTED | COMPLETED | EXPORTED | IN_YARD | LEFT_YARD
+    history       Json?
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+
+    docs             DocumentFile[]
+    paymentRequests  PaymentRequest[]
+}
+
+model DocumentFile {
+    id           String   @id @default(cuid())
+    request_id   String
+    type         String   // EIR | LOLO | INVOICE
+    name         String
+    size         Int
+    version      Int
+    uploader_id  String
+    storage_key  String   // local path or object key
+    createdAt    DateTime @default(now())
+    deleted_at   DateTime?
+    deleted_by   String?
+    delete_reason String?
+
+    request      ServiceRequest @relation(fields: [request_id], references: [id])
+
+    @@index([request_id])
+}
+
+model PaymentRequest {
+    id          String   @id @default(cuid())
+    request_id  String
+    created_by  String
+    status      String   // SENT | RECEIVED | PAID | REJECTED
+    createdAt   DateTime @default(now())
+
+    request     ServiceRequest @relation(fields: [request_id], references: [id])
+
+    @@index([request_id])
+}
+
+// Module 5 — Yard & Container
+model Yard {
+    id      String      @id @default(cuid())
+    name    String
+    blocks  YardBlock[]
+}
+
+model YardBlock {
+    id      String   @id @default(cuid())
+    yard_id String
+    code    String
+    yard    Yard     @relation(fields: [yard_id], references: [id])
+    slots   YardSlot[]
+
+    @@index([yard_id])
+}
+
+model YardSlot {
+    id          String   @id @default(cuid())
+    block_id    String
+    code        String
+    status      String   // EMPTY | RESERVED | OCCUPIED | UNDER_MAINTENANCE | EXPORT
+    kind        String?  // IMPORT/EXPORT/REEFER/GEN, ... optional
+    near_gate   Int      @default(0) // scoring helper
+    avoid_main  Int      @default(0)
+    is_odd      Boolean  @default(false)
+    occupant_container_no String?
+    reserved_expire_at   DateTime?
+    updatedAt   DateTime @updatedAt
+
+    block       YardBlock @relation(fields: [block_id], references: [id])
+    from_tasks  ForkliftTask[] @relation("from_slot")
+    to_tasks    ForkliftTask[] @relation("to_slot")
+
+    @@index([block_id])
+    @@index([occupant_container_no])
+}
+
+model ContainerMeta {
+    id           String   @id @default(cuid())
+    container_no String   @unique
+    dem_date     DateTime?
+    det_date     DateTime?
+    updatedAt    DateTime @updatedAt
+}
+
+model ForkliftTask {
+    id             String   @id @default(cuid())
+    container_no   String
+    from_slot_id   String?
+    to_slot_id     String?
+    status         String   // PENDING | IN_PROGRESS | COMPLETED | CANCELLED
+    assigned_driver_id String?
+    created_by     String
+    cancel_reason  String?
+    createdAt      DateTime @default(now())
+    updatedAt      DateTime @updatedAt
+
+    from_slot      YardSlot? @relation("from_slot", fields: [from_slot_id], references: [id])
+    to_slot        YardSlot? @relation("to_slot", fields: [to_slot_id], references: [id])
+}
+
+// =====================
+// Module 6 — Maintenance & Inventory
+// =====================
+
+enum EquipmentType {
+  CONTAINER
+  EQUIPMENT
+}
+
+enum InventoryMoveType {
+  IN
+  OUT
+}
+
+enum RepairStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+}
+
+model Equipment {
+  id        String        @id @default(cuid())
+  code      String        @unique
+  type      EquipmentType
+  status    String        // ACTIVE | INACTIVE
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  tickets   RepairTicket[]
+}
+
+model InventoryItem {
+  id            String               @id @default(cuid())
+  name          String               @unique
+  uom           String
+  qty_on_hand   Int                  @default(0)
+  reorder_point Int                  @default(0)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  movements     InventoryMovement[]
+  repairItems   RepairTicketItem[]
+}
+
+model InventoryMovement {
+  id                String             @id @default(cuid())
+  inventory_item_id String
+  type              InventoryMoveType
+  quantity          Int
+  ref_type          String?
+  ref_id            String?
+  createdAt         DateTime           @default(now())
+
+  item              InventoryItem      @relation(fields: [inventory_item_id], references: [id])
+
+  @@index([inventory_item_id])
+}
+
+model RepairTicket {
+  id                  String             @id @default(cuid())
+  code                String             @unique
+  equipment_id        String
+  created_by          String
+  status              RepairStatus       @default(PENDING_APPROVAL)
+  problem_description String
+  estimated_cost      Float?             @default(0)
+  manager_comment     String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  equipment           Equipment          @relation(fields: [equipment_id], references: [id])
+  items               RepairTicketItem[]
+
+  @@index([equipment_id])
+}
+
+model RepairTicketItem {
+  id                String   @id @default(cuid())
+  repair_ticket_id  String
+  inventory_item_id String
+  quantity          Int
+
+  ticket            RepairTicket  @relation(fields: [repair_ticket_id], references: [id])
+  inventoryItem     InventoryItem @relation(fields: [inventory_item_id], references: [id])
+
+  @@index([repair_ticket_id])
+  @@index([inventory_item_id])
+}
+
+// =====================
+// Module 7 — Finance & Invoicing
+// =====================
+
+model Invoice {
+  id            String   @id @default(cuid())
+  org_id        String?
+  invoice_no    String?
+  customer_id   String
+  issue_date    DateTime?
+  due_date      DateTime?
+  currency      String   @default("VND")
+  subtotal      Decimal  @db.Decimal(18, 2)
+  tax_amount    Decimal  @db.Decimal(18, 2)
+  total_amount  Decimal  @db.Decimal(18, 2)
+  status        String   @default("DRAFT")
+  paid_total    Decimal  @db.Decimal(18, 2) @default(0)
+  paid_at       DateTime?
+  notes         String?
+  source_module String?
+  source_id     String?
+  version       Int      @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  created_by    String?
+  updated_by    String?
+
+  items         InvoiceLineItem[]
+  allocations   PaymentAllocation[]
+
+  @@unique([org_id, invoice_no])
+  @@index([org_id, status, issue_date])
+  @@index([org_id, customer_id, issue_date])
+}
+
+model InvoiceLineItem {
+  id               String   @id @default(cuid())
+  org_id           String?
+  invoice_id       String
+  service_code     String
+  description      String
+  qty              Decimal  @db.Decimal(12, 3)
+  unit_price       Decimal  @db.Decimal(18, 4)
+  line_amount      Decimal  @db.Decimal(18, 2)
+  tax_code         String?
+  tax_rate         Decimal? @db.Decimal(5, 2)
+  tax_amount       Decimal  @db.Decimal(18, 2) @default(0)
+  total_line_amount Decimal @db.Decimal(18, 2)
+
+  invoice          Invoice  @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+
+  @@index([invoice_id])
+}
+
+model Payment {
+  id               String   @id @default(cuid())
+  org_id           String?
+  payment_no       String   @unique
+  customer_id      String
+  amount           Decimal  @db.Decimal(18, 2)
+  currency         String
+  paid_date        DateTime
+  method           String
+  reference_no     String?
+  notes            String?
+  idempotency_key  String?  @unique
+  createdAt        DateTime @default(now())
+  created_by       String?
+
+  allocations      PaymentAllocation[]
+
+  @@index([org_id, paid_date])
+}
+
+model PaymentAllocation {
+  id               String   @id @default(cuid())
+  org_id           String?
+  payment_id       String
+  invoice_id       String
+  allocated_amount Decimal  @db.Decimal(18, 2)
+
+  payment          Payment  @relation(fields: [payment_id], references: [id], onDelete: Cascade)
+  invoice          Invoice  @relation(fields: [invoice_id], references: [id], onDelete: Restrict)
+
+  @@unique([payment_id, invoice_id])
+  @@index([invoice_id])
+}
+
+model ExportJob {
+  id         String   @id @default(cuid())
+  org_id     String?
+  type       String
+  params     Json
+  status     String   @default("PENDING")
+  file_key   String?
+  error      String?
+  createdAt  DateTime @default(now())
+  doneAt     DateTime?
+}
 model RefreshToken {
     id          String   @id @default(cuid())
     user_id     String
