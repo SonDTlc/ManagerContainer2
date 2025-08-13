@@ -13,6 +13,13 @@ import userRoutes from './modules/users/controller/userRoutes';
 import customerRoutes from './modules/customers/controller/customerRoutes';
 import partnerRoutes from './modules/partners/controller/partnerRoutes';
 import auditRoutes from './modules/audit/controller/auditRoutes';
+import requestRoutes from './modules/requests/controller/RequestRoutes';
+import gateRoutes from './modules/gate/controller/GateRoutes';
+import yardRoutes from './modules/yard/controller/YardRoutes';
+import forkliftRoutes from './modules/forklift/controller/ForkliftRoutes';
+import containerRoutes from './modules/containers/controller/ContainerRoutes';
+import maintenanceRoutes from './modules/maintenance/controller/MaintenanceRoutes';
+import financeRoutes from './modules/finance/controller/FinanceRoutes';
 
 const app = express();
 app.use(helmet());
@@ -34,6 +41,13 @@ app.use('/users', authenticate, userRoutes);
 app.use('/customers', authenticate, customerRoutes);
 app.use('/partners', authenticate, partnerRoutes);
 app.use('/audit', authenticate, auditRoutes);
+app.use('/requests', authenticate, requestRoutes);
+app.use('/gate', gateRoutes);
+app.use('/yard', yardRoutes);
+app.use('/forklift', forkliftRoutes);
+app.use('/containers', containerRoutes);
+app.use('/maintenance', maintenanceRoutes);
+app.use('/finance', financeRoutes);
 
 const start = async () => {
 	await connectDatabase();

@@ -15,7 +15,7 @@ backend/
 │  └─ BACKEND_STRUCTURE.md      # (tài liệu này)
 ├─ shared/                      # Tài nguyên dùng chung
 │  ├─ config/
-│  │  └─ database.ts            # Kết nối DB, appConfig (PORT/JWT/Mongo)
+│  │  └─ database.ts            # Kết nối DB (Prisma/PostgreSQL), appConfig (PORT/JWT)
 │  ├─ middlewares/
 │  │  ├─ auth.ts                # JWT, xác thực, sign/verify token
 │  │  ├─ rbac.ts                # Phân quyền theo vai (RBAC)
@@ -82,8 +82,8 @@ backend/
 ### Vai trò từng lớp
 - Controller: nhận request/response, validate input (Joi), gọi service, trả HTTP code chuẩn, không chứa business logic.
 - Service: chứa quy tắc nghiệp vụ, gọi repository, gọi audit/event khi cần.
-- Repository: thao tác DB (Mongoose/Mongo hiện tại).
-- Model: định nghĩa schema, index, ràng buộc dữ liệu (unique…).
+- Repository: thao tác DB (Prisma/PostgreSQL).
+- Model: định nghĩa schema, index, ràng buộc dữ liệu (trong `prisma/schema.prisma`).
 - DTO: Joi schema để validate payload, giữ cho controller gọn.
 
 ### Chuẩn module hóa
@@ -114,14 +114,14 @@ backend/
 - Access log: `backend/logs/access.log` (morgan ‘combined’) + log console dev.
 
 ### Cấu hình & môi trường
-- `shared/config/database.ts`: `appConfig` (PORT, JWT, Mongo URI) và `connectDatabase()`.
+- `shared/config/database.ts`: `appConfig` (PORT, JWT) và `connectDatabase()` (PrismaClient).
 - `.env` mẫu:
   - `PORT=1000`
   - `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/managerContainer?schema=public`
   - `JWT_SECRET=dev-secret`
   - `JWT_EXPIRES_IN=24h`
-  - `MONGODB_URI=mongodb://localhost:27017/container_manager`
-- Lưu ý: hiện code kết nối MongoDB (Mongoose). Biến `DATABASE_URL` sẵn sàng nếu chuyển sang Postgres sau này.
+  - `MONGODB_URI=mongodb://localhost:27017/container_manager` (di sản, không còn dùng)
+- Lưu ý: Backend hiện dùng Prisma/PostgreSQL.
 
 ### Quy ước đặt tên
 - Tên file PascalCase cho Model/Service/Controller/Repository (`UserService.ts`).
@@ -215,6 +215,48 @@ Client → Route → `authenticate` (nếu cần) → `requireRoles` (nếu cầ
 - Model (tham chiếu cũ):
   - `modules/audit/model/AuditLog.ts`
 
+#### Module 3 — Service Requests & Documents
+- DTO/Repository/Service/Controller/Routes:
+  - `modules/requests/dto/RequestDtos.ts`
+  - `modules/requests/repository/RequestRepository.ts`
+  - `modules/requests/service/RequestService.ts`
+  - `modules/requests/controller/RequestController.ts`
+  - `modules/requests/controller/RequestRoutes.ts`
+- Prisma:
+  - `prisma/schema.prisma` (ServiceRequest, DocumentFile, PaymentRequest)
+- Upload local (demo): `backend/uploads/`
+
+#### Module 4 — Gate Management
+- Code map:
+  - DTO: `modules/gate/dto/GateDtos.ts`
+  - Middleware Gate Mode: `modules/gate/middleware/gateMode.ts`
+  - Service: `modules/gate/service/GateService.ts`
+  - Controller: `modules/gate/controller/GateController.ts`
+  - Routes: `modules/gate/controller/GateRoutes.ts`
+  - Mount: `main.ts` → `app.use('/gate', gateRoutes)`
+- Liên kết Module 3:
+  - State machine bổ sung `IN_YARD`/`LEFT_YARD` tại `modules/requests/service/RequestService.ts` và DTO `modules/requests/dto/RequestDtos.ts`
+- Frontend tham chiếu:
+  - Trang: `frontend/pages/Gate/index.tsx`
+  - Client: `frontend/services/gate.ts`
+  - RBAC helper: `frontend/utils/rbac.ts` (`canUseGate`)
+
+#### Module 5 — Yard & Container (Điều độ bãi, Forklift)
+- Prisma models: `Yard`, `YardBlock`, `YardSlot`, `ContainerMeta`, `ForkliftTask` (trong `prisma/schema.prisma`)
+- Seed dữ liệu demo: `prisma/seed.ts`
+- Yard:
+  - Service/Controller/Routes: `modules/yard/service/YardService.ts`, `modules/yard/controller/YardController.ts`, `modules/yard/controller/YardRoutes.ts`
+  - Endpoints: `/yard/map`, `/yard/container/:container_no`, `/yard/suggest-position`, `/yard/assign-position`
+- Forklift:
+  - Service/Controller/Routes: `modules/forklift/service/ForkliftService.ts`, `modules/forklift/controller/ForkliftController.ts`, `modules/forklift/controller/ForkliftRoutes.ts`
+  - Endpoints: `/forklift/tasks`, `/forklift/assign`, `/forklift/task/:id/status`
+- Container info:
+  - Service/Controller/Routes: `modules/containers/service/ContainerService.ts`, `modules/containers/controller/ContainerController.ts`, `modules/containers/controller/ContainerRoutes.ts`
+- Mount: `main.ts` → `app.use('/yard', ...)`, `app.use('/forklift', ...)`, `app.use('/containers', ...)`
+- Frontend tham chiếu:
+  - Trang điều độ: `frontend/pages/Yard/index.tsx`
+  - Client: `frontend/services/yard.ts`, `frontend/services/forklift.ts`
+
 #### Shared/Common
 - Cấu hình DB & Prisma:
   - `shared/config/database.ts`
@@ -245,3 +287,10 @@ Client → Route → `authenticate` (nếu cần) → `requireRoles` (nếu cầ
   - `frontend/pages/UsersPartners/index.tsx`
 - RBAC helper:
   - `frontend/utils/rbac.ts`
+
+#### Tài liệu chi tiết theo module
+- Module 3: `docs/MODULE_3_REQUESTS.md`
+- Module 4: `docs/MODULE_4_GATE.md`
+- Module 5: `docs/MODULE_5_YARD.md`
+- Module 7: `docs/MODULE_7_FINANCE.md`
+- Module 6: `docs/MODULE_6_MAINTENANCE.md`
