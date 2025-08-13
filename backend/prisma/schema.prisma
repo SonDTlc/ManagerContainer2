@@ -1,0 +1,134 @@
+generator client {
+	provider = "prisma-client-js"
+}
+
+datasource db {
+	provider = "postgresql"
+	url      = env("DATABASE_URL")
+}
+
+model User {
+    id               String   @id @default(cuid())
+    email            String   @unique
+    username         String?  @unique
+    full_name        String
+    phone            String?
+    role             String   // legacy single-role; giữ để tương thích
+    roles            Json?    // mảng roles theo spec
+    tenant_id        String?
+    partner_id       String?
+    status           String   // INVITED | ACTIVE | DISABLED | LOCKED | INVITED_EXPIRED
+    password_hash    String?
+    mfa_enabled      Boolean  @default(false)
+    email_verified   Boolean  @default(false)
+    phone_verified   Boolean  @default(false)
+    failed_attempts  Int      @default(0)
+    locked_until     DateTime?
+    last_login_at    DateTime?
+    invite_token     String?
+    invite_expires_at DateTime?
+    createdAt        DateTime @default(now())
+    updatedAt        DateTime @updatedAt
+
+    RefreshTokens         RefreshToken[]
+    PasswordResetTokens   PasswordResetToken[]
+    MfaSecrets            MfaSecret[]
+    EmailVerifications    EmailVerification[]
+    PhoneOtps             PhoneOtp[]
+    AuditLogs             AuditLog[]
+
+    @@index([role, tenant_id])
+    @@index([partner_id])
+}
+
+model Customer {
+	id            String   @id @default(cuid())
+	name          String   @unique
+	tax_code      String   @unique
+	address       String?
+	contact_email String?
+	status        String   // ACTIVE | INACTIVE
+	createdAt     DateTime @default(now())
+	updatedAt     DateTime @updatedAt
+}
+
+model Partner {
+	id            String   @id @default(cuid())
+	type          String
+	name          String   @unique
+	tax_code      String?
+	contact_email String?
+	status        String   // DRAFT | ACTIVE | INACTIVE
+	createdAt     DateTime @default(now())
+	updatedAt     DateTime @updatedAt
+}
+
+model AuditLog {
+	id        String   @id @default(cuid())
+    actor_id  String?
+    actor     User?    @relation(fields: [actor_id], references: [id])
+	action    String
+	entity    String?
+	entity_id String?
+	meta      Json?
+	createdAt DateTime @default(now())
+
+	@@index([action, createdAt])
+}
+
+model RefreshToken {
+    id          String   @id @default(cuid())
+    user_id     String
+    token_hash  String
+    expires_at  DateTime
+    revoked_at  DateTime?
+    created_at  DateTime @default(now())
+    user        User     @relation(fields: [user_id], references: [id])
+
+    @@index([user_id])
+}
+
+model PasswordResetToken {
+    id          String   @id @default(cuid())
+    user_id     String
+    token_hash  String
+    expires_at  DateTime
+    used_at     DateTime?
+    created_at  DateTime @default(now())
+    user        User     @relation(fields: [user_id], references: [id])
+
+    @@index([user_id])
+}
+
+model MfaSecret {
+    id          String   @id @default(cuid())
+    user_id     String
+    type        String   // 'TOTP'
+    secret      String
+    created_at  DateTime @default(now())
+    user        User     @relation(fields: [user_id], references: [id])
+
+    @@index([user_id])
+}
+
+model EmailVerification {
+    id          String   @id @default(cuid())
+    user_id     String
+    token_hash  String
+    expires_at  DateTime
+    used_at     DateTime?
+    created_at  DateTime @default(now())
+    user        User     @relation(fields: [user_id], references: [id])
+    @@index([user_id])
+}
+
+model PhoneOtp {
+    id          String   @id @default(cuid())
+    user_id     String
+    otp_hash    String
+    expires_at  DateTime
+    used_at     DateTime?
+    created_at  DateTime @default(now())
+    user        User     @relation(fields: [user_id], references: [id])
+    @@index([user_id])
+}
