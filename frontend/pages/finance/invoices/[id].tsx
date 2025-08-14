@@ -37,14 +37,14 @@ export default function InvoiceDetail(){
             {canIssue && (
               <div className="grid" style={{gap:8, marginTop:8}}>
                 <div style={{fontWeight:600}}>Issue</div>
-                <input placeholder="issue_date YYYY-MM-DD" value={issue.issue_date} onChange={e=>setIssue({...issue, issue_date:e.target.value})} />
-                <input placeholder="due_date YYYY-MM-DD" value={issue.due_date} onChange={e=>setIssue({...issue, due_date:e.target.value})} />
+                <input type="date" value={issue.issue_date} onChange={e=>setIssue({...issue, issue_date:e.target.value})} title="Ngày phát hành" />
+                <input type="date" value={issue.due_date} onChange={e=>setIssue({...issue, due_date:e.target.value})} title="Hạn thanh toán" />
                 <button className="btn" onClick={doIssue}>Issue hóa đơn</button>
               </div>
             )}
             <div className="grid" style={{gap:8, marginTop:8}}>
               <div style={{fontWeight:600}}>Cập nhật</div>
-              <input placeholder="due_date YYYY-MM-DD" value={patch.due_date} onChange={e=>setPatch({...patch, due_date:e.target.value})} />
+              <input type="date" value={patch.due_date} onChange={e=>setPatch({...patch, due_date:e.target.value})} title="Hạn thanh toán" />
               <input placeholder="notes" value={patch.notes} onChange={e=>setPatch({...patch, notes:e.target.value})} />
               <button className="btn" onClick={doPatch}>Lưu</button>
             </div>
@@ -56,5 +56,6 @@ export default function InvoiceDetail(){
     </>
   );
 }
+
 
 

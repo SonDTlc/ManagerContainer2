@@ -90,6 +90,8 @@ Hệ thống **Tobe Depot Management System (TDMS)** là nền tảng phần m�
 - Báo cáo vận hành: tình trạng bãi, hiệu suất cổng, bảo trì.
 - Dashboard tổng quan KPI.
 - Xuất báo cáo PDF/Excel.
+  
+  Tham chiếu chi tiết: xem `backend/docs/MODULE_8_REPORTS.md`.
 
 ---
 

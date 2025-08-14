@@ -3,6 +3,7 @@ import { authenticate } from '../../../shared/middlewares/auth';
 import { requireRoles } from '../../../shared/middlewares/rbac';
 import invoiceCtrl from './InvoiceController';
 import paymentCtrl from './PaymentController';
+import serviceCatalogCtrl from './ServiceCatalogController';
 
 const router = Router();
 router.use(authenticate, requireRoles('SaleAdmin','SystemAdmin'));
@@ -19,6 +20,10 @@ router.post('/invoices/:id/cancel', (req, res) => invoiceCtrl.cancel(req as any,
 router.get('/payments', (req, res) => paymentCtrl.list(req as any, res));
 router.post('/payments', (req, res) => paymentCtrl.create(req as any, res));
 
+// Service Catalog (temporary in-memory)
+router.get('/services', (_req, res) => serviceCatalogCtrl.listServices(_req as any, res));
+
 export default router;
+
 
 
