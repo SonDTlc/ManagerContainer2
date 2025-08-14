@@ -88,46 +88,46 @@ export default function UsersPartners(){
 	return (
 		<>
 			<Header />
-			<main className="container">
-				<div className="grid grid-cols-3" style={{gap:16}}>
-					<div style={{gridColumn:'span 2'}}>
-						<Card title="Thiết lập Token (JWT)">
-							<div className="searchbar">
-								<input type="text" placeholder="Dán JWT token ở đây để gọi API" value={token} onChange={(e)=>setToken(e.target.value)} />
-								<button className="btn" onClick={saveToken}>Lưu token</button>
-							</div>
-							<div style={{fontSize:12,color:'#6b7280',marginTop:8}}>Chưa có token sẽ không gọi được API (401). Dùng endpoint /auth/login để lấy token.</div>
-							{message && <div style={{marginTop:8,color:'#065f46',fontSize:13}}>{message}</div>}
-							{lastInviteToken && (
-								<div style={{marginTop:8,fontSize:13}}>
-									Token mời: <code>{lastInviteToken}</code> (mở <a href={`/Register?token=${lastInviteToken}`}>/Register</a> để kích hoạt)
-								</div>
-							)}
-						</Card>
-					</div>
-					<Card title="Bộ lọc bảng hiển thị">
-						<div className="searchbar">
-							<select value={tableView} onChange={(e)=>setTableView(e.target.value as any)}>
-								<option value="users">Users</option>
-								<option value="customers">Customers</option>
-								<option value="partners">Partners</option>
-							</select>
-							<div style={{fontSize:12,color:'#6b7280'}}>Chọn bảng cần xem. Form tạo user ở cột phải.</div>
-						</div>
-					</Card>
-				</div>
+            <main className="container">
+                <div className="grid grid-cols-3" style={{gap:16}}>
+                    <div style={{gridColumn:'span 2'}}>
+                        <Card title="Thiết lập Token (JWT)">
+                            <div className="searchbar">
+                                <input type="text" placeholder="Dán JWT token ở đây để gọi API" value={token} onChange={(e)=>setToken(e.target.value)} />
+                                <button className="btn" onClick={saveToken}>Lưu token</button>
+                            </div>
+                            <div className="muted" style={{marginTop:8}}>Chưa có token sẽ không gọi được API (401). Dùng endpoint /auth/login để lấy token.</div>
+                            {message && <div style={{marginTop:8,color:'#065f46',fontSize:13,transition:'opacity .2s ease'}}>{message}</div>}
+                            {lastInviteToken && (
+                                <div style={{marginTop:8,fontSize:13}}>
+                                    Token mời: <code>{lastInviteToken}</code> (mở <a href={`/Register?token=${lastInviteToken}`}>/Register</a> để kích hoạt)
+                                </div>
+                            )}
+                        </Card>
+                    </div>
+                    <Card title="Bộ lọc bảng hiển thị">
+                        <div className="searchbar">
+                            <select value={tableView} onChange={(e)=>setTableView(e.target.value as any)}>
+                                <option value="users">Users</option>
+                                <option value="customers">Customers</option>
+                                <option value="partners">Partners</option>
+                            </select>
+                            <div className="muted">Chọn bảng cần xem. Form tạo user ở cột phải.</div>
+                        </div>
+                    </Card>
+                </div>
 
 				<div className="grid grid-cols-2" style={{gap:16, marginTop:16}}>
 					<div>
 						{tableView==='users' && (
 							<Card title="Users">
-								<table className="table">
-									<thead><tr><th>Email</th><th>Role</th><th>Status</th><th>Hành động</th></tr></thead>
+                                <table className="table">
+                                    <thead style={{background:'#f7f9ff'}}><tr><th>Email</th><th>Role</th><th>Status</th><th>Hành động</th></tr></thead>
 									<tbody>
 										{users?.data?.map((u: any)=>(
 											<tr key={u.id || u._id}>
-												<td>{u.email}</td><td>{u.role}</td><td>{u.status}</td>
-												<td style={{display:'flex',gap:8}}>
+                                                <td style={{fontWeight:700}}>{u.email}</td><td>{u.role}</td><td>{u.status}</td>
+                                                <td style={{display:'flex',gap:8}}>
 													<button className="btn" title={u.status==='DISABLED'?'Mở lại quyền đăng nhập':'Chặn không cho đăng nhập'} onClick={()=>userAction(u.id||u._id, u.status==='DISABLED'?'enable':'disable')}>{u.status==='DISABLED'?'Bật lại':'Vô hiệu hóa'}</button>
 													<button className="btn" title={u.status==='LOCKED'?'Cho phép đăng nhập trở lại':'Khóa tạm thời'} onClick={()=>userAction(u.id||u._id, u.status==='LOCKED'?'unlock':'lock')}>{u.status==='LOCKED'?'Mở khóa':'Khóa'}</button>
 													<button className="btn" title="Gửi lại thư mời kích hoạt (tạo token mới)" onClick={()=>userAction(u.id||u._id, 'invite')}>Gửi lại lời mời</button>
@@ -140,8 +140,8 @@ export default function UsersPartners(){
 						)}
 						{tableView==='customers' && (
 							<Card title="Customers">
-								<table className="table">
-									<thead><tr><th>Tên</th><th>MST</th><th>Trạng thái</th></tr></thead>
+                                <table className="table">
+                                    <thead style={{background:'#f7f9ff'}}><tr><th>Tên</th><th>MST</th><th>Trạng thái</th></tr></thead>
 									<tbody>
 										{customers?.data?.map((c: any)=>(<tr key={c.id || c._id}><td>{c.name}</td><td>{c.tax_code}</td><td>{c.status}</td></tr>))}
 									</tbody>
@@ -150,8 +150,8 @@ export default function UsersPartners(){
 						)}
 						{tableView==='partners' && (
 							<Card title="Partners">
-								<table className="table">
-									<thead><tr><th>Tên</th><th>Loại</th><th>Trạng thái</th></tr></thead>
+                                <table className="table">
+                                    <thead style={{background:'#f7f9ff'}}><tr><th>Tên</th><th>Loại</th><th>Trạng thái</th></tr></thead>
 									<tbody>
 										{partners?.data?.map((p: any)=>(<tr key={p.id || p._id}><td>{p.name}</td><td>{p.type}</td><td>{p.status}</td></tr>))}
 									</tbody>
@@ -162,8 +162,8 @@ export default function UsersPartners(){
 
 					<div style={{display:'grid', gap:16}}>
 						{showInternalForm(role) && (
-							<Card title="Tạo nhân sự nội bộ (HRManager/SystemAdmin)">
-								<div className="grid">
+                            <Card title="Tạo nhân sự nội bộ (HRManager/SystemAdmin)">
+                                <div className="grid" style={{gap:12}}>
 									<input type="text" placeholder="Họ tên" value={empFullName} onChange={e=>setEmpFullName(e.target.value)} />
 									<input type="email" placeholder="Email" value={empEmail} onChange={e=>setEmpEmail(e.target.value)} />
 									<select value={empRole} onChange={e=>setEmpRole(e.target.value)}>
@@ -178,8 +178,8 @@ export default function UsersPartners(){
 						)}
 
 						{showCustomerForm(role) && (
-							<Card title="Tạo user khách (SaleAdmin/CustomerAdmin)">
-								<div className="grid">
+                            <Card title="Tạo user khách (SaleAdmin/CustomerAdmin)">
+                                <div className="grid" style={{gap:12}}>
 									<input type="text" placeholder="Họ tên" value={cusFullName} onChange={e=>setCusFullName(e.target.value)} />
 									<input type="email" placeholder="Email" value={cusEmail} onChange={e=>setCusEmail(e.target.value)} />
 									<select value={cusRole} onChange={e=>setCusRole(e.target.value)}>
@@ -187,7 +187,7 @@ export default function UsersPartners(){
 										<option value="CustomerUser">CustomerUser</option>
 									</select>
 									<input type="text" placeholder="tenant_id (ID khách hàng)" value={tenantId} onChange={e=>setTenantId(e.target.value)} />
-									<div style={{fontSize:12,color:'#6b7280'}}>Lấy tenant_id từ danh sách Customers hoặc tạo khách mới bên module Customers.</div>
+                                    <div className="muted">Lấy tenant_id từ danh sách Customers hoặc tạo khách mới bên module Customers.</div>
 									<button className="btn" onClick={createCustomerUser}>Tạo user khách</button>
 								</div>
 							</Card>

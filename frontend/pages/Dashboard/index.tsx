@@ -7,16 +7,34 @@ import { canViewUsersPartners, isCustomerRole, isSaleAdmin, isAccountant, canUse
 
 export default function Dashboard(){
 	const [me, setMe] = useState<any>(null);
-	useEffect(()=>{ api.get('/auth/me').then(r=>setMe(r.data)).catch(()=>{}); }, []);
+    useEffect(()=>{ api.get('/auth/me').then(r=>setMe(r.data)).catch(()=>{}); }, []);
+    // Auto-redirect to the first available option after login (unless ?stay=1)
+    useEffect(()=>{
+        if (!me) return;
+        const role = me?.role || me?.roles?.[0];
+        const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+        if (params.get('stay') === '1') return;
+        const firstRoute = (()=>{
+            if (canViewUsersPartners(role)) return '/UsersPartners';
+            if (isCustomerRole(role)) return '/Requests/Customer';
+            if (isSaleAdmin(role) || isAccountant(role)) return '/Requests/Depot';
+            if (canUseGate(role)) return '/Gate';
+            if (isSaleAdmin(role)) return '/Yard';
+            return '/Account';
+        })();
+        if (window.location.pathname === '/Dashboard') {
+            window.location.replace(firstRoute);
+        }
+    }, [me]);
 	const role = me?.role || me?.roles?.[0];
 	return (
 		<>
 			<Header />
-			<main className="container">
-				<Card title={`Chào ${me?.full_name || ''} (${role || '...'})`}>
-					<div className="grid grid-cols-3">
+            <main className="container">
+                <Card title={`Chào ${me?.full_name || ''} (${role || '...'})`}>
+                    <div className="grid grid-cols-3" style={{gap:20}}>
 						{canViewUsersPartners(role) && (
-							<Card title="Quản lý người dùng & đối tác" actions={<Link className="btn" href="/UsersPartners">Mở</Link>}>
+                            <Card title="Quản lý người dùng & đối tác" actions={<Link className="btn" href="/UsersPartners">Mở</Link>}>
 								Tạo/mời user, quản lý khách hàng/đối tác.
 							</Card>
 						)}
@@ -41,7 +59,7 @@ export default function Dashboard(){
 						</Card>
 					)}
 					{isSaleAdmin(role) && (
-						<Card title="Bảo trì & Vật tư" actions={<div style={{display:'flex',gap:8}}>
+                        <Card title="Bảo trì & Vật tư" actions={<div style={{display:'flex',gap:8}}>
 							<Link className="btn" href="/Maintenance/Repairs">Phiếu sửa chữa</Link>
 							<Link className="btn" href="/Maintenance/Inventory">Tồn kho</Link>
 						</div>}>
@@ -49,7 +67,7 @@ export default function Dashboard(){
 						</Card>
 					)}
 					{isSaleAdmin(role) && (
-						<Card title="Tài chính & Hóa đơn" actions={<div style={{display:'flex',gap:8}}>
+                        <Card title="Tài chính & Hóa đơn" actions={<div style={{display:'flex',gap:8}}>
 							<Link className="btn" href="/finance/invoices">Danh sách Hóa đơn</Link>
 							<Link className="btn" href="/finance/invoices/new">Tạo hóa đơn</Link>
 						</div>}>
