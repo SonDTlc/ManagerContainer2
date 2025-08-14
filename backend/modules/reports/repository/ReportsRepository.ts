@@ -71,6 +71,42 @@ export class ReportsRepository {
     }
     return buckets;
   }
+
+  async containerList(params: { q?: string; status?: string; type?: string; page: number; pageSize: number }){
+    const where: any = {};
+    if (params.q){ where.OR = [ { container_no: { contains: params.q, mode: 'insensitive' } } ]; }
+    if (params.status){
+      // status theo slot
+      where.slotStatus = params.status;
+    }
+    // Join giữa ContainerMeta và vị trí hiện tại (YardSlot)
+    const raw = await prisma.$queryRawUnsafe<any[]>(
+      `
+      SELECT cm.container_no,
+             cm.dem_date, cm.det_date,
+             ys.status as slot_status, ys.code as slot_code, yb.code as block_code, y.name as yard_name
+      FROM "ContainerMeta" cm
+      LEFT JOIN "YardSlot" ys ON ys."occupant_container_no" = cm.container_no
+      LEFT JOIN "YardBlock" yb ON yb.id = ys.block_id
+      LEFT JOIN "Yard" y ON y.id = yb.yard_id
+      WHERE ($1::text IS NULL OR cm.container_no ILIKE '%'||$1||'%')
+        AND ($2::text IS NULL OR ys.status = $2)
+      ORDER BY cm.container_no
+      LIMIT $3 OFFSET $4
+      `,
+      params.q ?? null,
+      params.status ?? null,
+      params.pageSize,
+      (params.page-1) * params.pageSize
+    );
+    const total = (await prisma.$queryRawUnsafe<any[]>(
+      `SELECT COUNT(*)::int as cnt FROM "ContainerMeta" cm LEFT JOIN "YardSlot" ys ON ys."occupant_container_no" = cm.container_no
+       WHERE ($1::text IS NULL OR cm.container_no ILIKE '%'||$1||'%') AND ($2::text IS NULL OR ys.status = $2)`,
+      params.q ?? null,
+      params.status ?? null
+    ))[0]?.cnt || 0;
+    return { items: raw, total, page: params.page, pageSize: params.pageSize };
+  }
 }
 
 export default new ReportsRepository();
