@@ -10,6 +10,11 @@ export type InvoiceItemInput = {
 };
 
 export const financeApi = {
+  // Catalog
+  async listServices() {
+    const { data } = await api.get('/finance/services');
+    return data as Array<{ code: string; name: string; default_description?: string; default_unit_price?: number; tax_rate?: number }>;
+  },
   // Invoices
   async listInvoices(params?: any) {
     const { data } = await api.get('/finance/invoices', { params });
@@ -45,5 +50,6 @@ export const financeApi = {
     return data;
   }
 };
+
 
 

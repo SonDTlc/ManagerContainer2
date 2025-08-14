@@ -20,6 +20,7 @@ import forkliftRoutes from './modules/forklift/controller/ForkliftRoutes';
 import containerRoutes from './modules/containers/controller/ContainerRoutes';
 import maintenanceRoutes from './modules/maintenance/controller/MaintenanceRoutes';
 import financeRoutes from './modules/finance/controller/FinanceRoutes';
+import reportsRoutes from './modules/reports/controller/ReportsRoutes';
 
 const app = express();
 app.use(helmet());
@@ -48,6 +49,7 @@ app.use('/forklift', forkliftRoutes);
 app.use('/containers', containerRoutes);
 app.use('/maintenance', maintenanceRoutes);
 app.use('/finance', financeRoutes);
+app.use('/reports', reportsRoutes);
 
 const start = async () => {
 	await connectDatabase();

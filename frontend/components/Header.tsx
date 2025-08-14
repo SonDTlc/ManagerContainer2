@@ -40,6 +40,7 @@ export default function Header(){
 				<div style={{display:'flex',alignItems:'center',gap:12}}>
 					{showUsersLink && <Link className="btn" href="/UsersPartners" style={{background:'#fff',color:'#0a2558'}}>Users/Partners</Link>}
 					{hasToken && <Link className="btn" href="/Account" style={{background:'#fff',color:'#0a2558'}}>Tài khoản</Link>}
+					{hasToken && <Link className="btn" href="/Reports" style={{background:'#fff',color:'#0a2558'}}>Reports</Link>}
 					{me?.role && <span style={{color:'#fff',opacity:.9,fontSize:12}}>({me.role}) {me.email}</span>}
 					{showLogout && <button className="btn" onClick={onLogout} style={{background:'#fff',color:'#0a2558'}}>Đăng xuất</button>}
 					{!hasToken && router.pathname !== '/Login' && <Link className="btn" href="/Login" style={{background:'#fff',color:'#0a2558'}}>Đăng nhập</Link>}
