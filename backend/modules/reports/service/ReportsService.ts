@@ -97,6 +97,12 @@ export class ReportsService {
     stream.pipe = (res: any)=>{ res.setHeader('Content-Type','application/pdf'); res.setHeader('Content-Disposition', `attachment; filename="${payload.filename}.pdf"`); return PDFDocument.prototype.pipe.call(doc, res); };
     return doc as any;
   }
+
+  async listContainers(_user: AuthUser, query: any){
+    const page = Math.max(1, parseInt(String(query.page||'1'),10));
+    const pageSize = Math.min(200, Math.max(1, parseInt(String(query.pageSize||'20'),10)));
+    return repo.containerList({ q: query.q as string|undefined, status: query.status as string|undefined, type: query.type as string|undefined, page, pageSize });
+  }
 }
 
 export default new ReportsService();

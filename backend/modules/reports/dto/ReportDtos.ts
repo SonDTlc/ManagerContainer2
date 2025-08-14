@@ -26,4 +26,12 @@ export const exportSchema = Joi.object({
   }).default({})
 });
 
+export const containerListQuerySchema = Joi.object({
+  q: Joi.string().optional(),
+  status: Joi.string().optional(),
+  type: Joi.string().optional(),
+  page: Joi.number().integer().min(1).default(1),
+  pageSize: Joi.number().integer().min(1).max(200).default(20)
+});
+
 

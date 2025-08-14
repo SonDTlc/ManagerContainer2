@@ -24,6 +24,11 @@ class ReportsController {
     try{ const file = await service.exportReport(req.user!, value); return file.pipe(res); }
     catch(e:any){ return res.status(400).json({ message: e.message }); }
   }
+
+  async containers(req: AuthRequest, res: Response){
+    try{ return res.json(await service.listContainers(req.user!, req.query)); }
+    catch(e:any){ return res.status(400).json({ message: e.message }); }
+  }
 }
 
 export default new ReportsController();
