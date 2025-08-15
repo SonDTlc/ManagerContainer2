@@ -1,0 +1,25 @@
+{
+  "name": "managecontainer",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "engines": {
+    "node": ">=18.18.0",
+    "npm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev:backend": "npm run -w backend dev",
+    "dev:frontend": "npm run -w frontend dev",
+    "build": "npm run -w backend build && npm run -w frontend build",
+    "start:backend": "npm run -w backend start",
+    "start:frontend": "npm run -w frontend start",
+    "lint:frontend": "npm run -w frontend lint",
+    "prisma:generate": "npm run -w backend prisma:generate",
+    "prisma:migrate": "npm run -w backend prisma:migrate",
+    "prisma:seed": "npm run -w backend prisma:seed",
+    "prisma:studio": "npm run -w backend prisma:studio"
+  }
+}
