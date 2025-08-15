@@ -145,6 +145,21 @@ export class UserService {
 		return { invite_token: invite.token, invite_expires_at: invite.expires };
 	}
 
+	async delete(actor: any, id: string) {
+		const user = await repo.findById(id);
+		if (!user) throw new Error('User không tồn tại');
+		if (user.status !== 'DISABLED') throw new Error('Chỉ có thể xóa user đã bị vô hiệu hóa');
+		
+		// Kiểm tra quyền xóa
+		if (actor.role === 'CustomerAdmin' && user.tenant_id !== actor.tenant_id) {
+			throw new Error('Không có quyền xóa user khác tenant');
+		}
+		
+		await repo.deleteById(id);
+		await audit(String(actor._id as any), 'USER.DELETED', 'USER', id);
+		return true;
+	}
+
 	private buildInvite() { return { token: crypto.randomBytes(24).toString('hex'), expires: new Date(Date.now() + 1000*60*60*24*7) }; }
 }
 

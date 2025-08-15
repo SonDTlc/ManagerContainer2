@@ -44,12 +44,13 @@ export default function DepotRequests(){
 			<Header />
 			<main className="container">
 				<Card title="Yêu cầu dịch vụ (Depot)">
+					<div style={{overflow:'hidden', borderRadius:12, border:'1px solid #e8eef6'}}>
 					<table className="table">
-						<thead><tr><th>Loại</th><th>Container</th><th>ETA</th><th>Trạng thái</th><th>Mã tra cứu Gate</th><th>Hành động</th></tr></thead>
+						<thead style={{background:'#f7f9ff'}}><tr><th>Loại</th><th>Container</th><th>ETA</th><th>Trạng thái</th><th>Mã tra cứu Gate</th><th>Hành động</th></tr></thead>
 						<tbody>
 							{data?.data?.map((it: any)=>(
 								<tr key={it.id}>
-									<td>{it.type}</td><td>{it.container_no}</td><td>{it.eta ? new Date(it.eta).toLocaleString() : ''}</td><td>{it.status}</td>
+									<td style={{fontWeight:700}}>{it.type}</td><td>{it.container_no}</td><td>{it.eta ? new Date(it.eta).toLocaleString() : ''}</td><td><span style={{background:'#eef2ff',color:'#0a2558',padding:'4px 8px',borderRadius:8,fontWeight:700}}>{it.status}</span></td>
 									<td>
 										<div style={{display:'flex',gap:8,alignItems:'center'}}>
 											<span style={{fontSize:12,color:'#1e3a8a'}}>{it.container_no}</span>
@@ -67,6 +68,7 @@ export default function DepotRequests(){
 							))}
 						</tbody>
 					</table>
+					</div>
 					{msg && <div style={{fontSize:13,marginTop:12,color: msg.ok?'#065f46':'#dc2626'}}>{msg.text}</div>}
 				</Card>
 			</main>

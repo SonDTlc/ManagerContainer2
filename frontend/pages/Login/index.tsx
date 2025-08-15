@@ -30,15 +30,24 @@ export default function Login(){
 	return (
 		<>
 			<Header />
-			<main className="container">
-				<div className="card" style={{maxWidth:420, margin:'40px auto'}}>
-					<h3 style={{marginTop:0}}>Đăng nhập</h3>
-					<div style={{display:'grid', gap:12}}>
-						<input type="text" placeholder="Tên đăng nhập" value={username} onChange={e=>setUsername(e.target.value)} />
-						<input type="password" placeholder="Mật khẩu" value={password} onChange={e=>setPassword(e.target.value)} />
-						{error && <div style={{color:'#dc2626', fontSize:13}}>{error}</div>}
-						<button className="btn" onClick={onLogin}>Đăng nhập</button>
-						<div style={{fontSize:13,color:'#6b7280',textAlign:'center'}}>
+			<main className="container" style={{display:'flex', justifyContent:'center', alignItems:'center', minHeight:'calc(100vh - 120px)'}}>
+				<div className="card" style={{maxWidth:460, width:'100%', padding:'32px 28px'}}>
+					<div style={{marginBottom:16, textAlign:'center'}}>
+						<h2 style={{margin:0}}>Đăng nhập</h2>
+						<p className="muted" style={{margin:'8px 0 0'}}>Nhập thông tin để truy cập hệ thống</p>
+					</div>
+					<div style={{display:'grid', gap:14}}>
+						<div>
+							<label style={{display:'block', fontSize:12, color:'#475569', marginBottom:6}}>Email / Tên đăng nhập</label>
+							<input style={{height:44}} type="text" placeholder="email@company.com" value={username} onChange={e=>setUsername(e.target.value)} />
+						</div>
+						<div>
+							<label style={{display:'block', fontSize:12, color:'#475569', marginBottom:6}}>Mật khẩu</label>
+							<input style={{height:44}} type="password" placeholder="••••••••" value={password} onChange={e=>setPassword(e.target.value)} />
+						</div>
+						{error && <div style={{color:'#dc2626', fontSize:13, padding:'8px 10px', background:'#fef2f2', border:'1px solid #fecaca', borderRadius:8}}>{error}</div>}
+						<button className="btn" style={{height:44}} onClick={onLogin}>Đăng nhập</button>
+						<div style={{fontSize:13,color:'#6b7280',textAlign:'center', marginTop:4}}>
 							Chưa có mật khẩu? <Link href="/Register">Kích hoạt tài khoản (Accept Invite)</Link>
 						</div>
 					</div>

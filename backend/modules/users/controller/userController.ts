@@ -36,6 +36,15 @@ export class UserController {
 			return res.status(400).json({ message: e.message }); 
 		} 
 	}
+
+	async delete(req: AuthRequest, res: Response) {
+		try {
+			await service.delete((req as any).userDoc || (req.user as any), req.params.id);
+			return res.json({ success: true });
+		} catch (e: any) {
+			return res.status(400).json({ message: e.message });
+		}
+	}
 }
 
 export default new UserController();
