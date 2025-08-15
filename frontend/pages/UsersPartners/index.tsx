@@ -40,8 +40,17 @@ export default function UsersPartners(){
 
 	const createEmployee = async () => {
 		setMessage('');
+		// Validation trước khi gửi
+		if (!empFullName.trim()) {
+			setMessage('Vui lòng nhập họ tên');
+			return;
+		}
+		if (!empEmail.trim() || !empEmail.includes('@')) {
+			setMessage('Vui lòng nhập email hợp lệ');
+			return;
+		}
 		try{
-			await api.post('/users', { full_name: empFullName, email: empEmail, role: empRole });
+			await api.post('/users', { full_name: empFullName.trim(), email: empEmail.trim().toLowerCase(), role: empRole });
 			setMessage('Tạo nhân sự nội bộ thành công');
 			setEmpFullName(''); setEmpEmail('');
 			mutate(['/users?role=&page=1&limit=10']);
@@ -50,20 +59,35 @@ export default function UsersPartners(){
 
 	const createCustomerUser = async () => {
 		setMessage('');
+		// Validation trước khi gửi
+		if (!cusFullName.trim()) {
+			setMessage('Vui lòng nhập họ tên');
+			return;
+		}
+		if (!cusEmail.trim() || !cusEmail.includes('@')) {
+			setMessage('Vui lòng nhập email hợp lệ');
+			return;
+		}
+		if (!tenantId.trim()) {
+			setMessage('Vui lòng nhập tenant_id');
+			return;
+		}
 		try{
-			await api.post('/users', { full_name: cusFullName, email: cusEmail, role: cusRole, tenant_id: tenantId });
+			await api.post('/users', { full_name: cusFullName.trim(), email: cusEmail.trim().toLowerCase(), role: cusRole, tenant_id: tenantId.trim() });
 			setMessage('Tạo user khách hàng thành công');
 			setCusFullName(''); setCusEmail(''); setTenantId('');
 			mutate(['/users?role=&page=1&limit=10']);
 		}catch(e:any){ setMessage(e?.response?.data?.message || 'Lỗi tạo user khách'); }
 	};
 
-	const userAction = async (id: string, action: 'disable'|'enable'|'lock'|'unlock'|'invite') => {
+	const userAction = async (id: string, action: 'disable'|'enable'|'lock'|'unlock'|'invite'|'delete') => {
 		setMessage(''); setLastInviteToken('');
 		try{
 			if (action === 'invite') {
 				const res = await api.post(`/users/${id}/send-invite`);
 				setLastInviteToken(res.data?.invite_token || '');
+			} else if (action === 'delete') {
+				await api.delete(`/users/${id}`);
 			} else {
 				await api.patch(`/users/${id}/${action}`);
 			}
@@ -96,7 +120,9 @@ export default function UsersPartners(){
                                 <input type="text" placeholder="Dán JWT token ở đây để gọi API" value={token} onChange={(e)=>setToken(e.target.value)} />
                                 <button className="btn" onClick={saveToken}>Lưu token</button>
                             </div>
-                            <div className="muted" style={{marginTop:8}}>Chưa có token sẽ không gọi được API (401). Dùng endpoint /auth/login để lấy token.</div>
+                            <div className="muted" style={{marginTop:8}}>
+                                {token ? '✅ Token đã được thiết lập' : '❌ Chưa có token sẽ không gọi được API (401). Dùng endpoint /auth/login để lấy token.'}
+                            </div>
                             {message && <div style={{marginTop:8,color:'#065f46',fontSize:13,transition:'opacity .2s ease'}}>{message}</div>}
                             {lastInviteToken && (
                                 <div style={{marginTop:8,fontSize:13}}>
@@ -131,6 +157,9 @@ export default function UsersPartners(){
 													<button className="btn" title={u.status==='DISABLED'?'Mở lại quyền đăng nhập':'Chặn không cho đăng nhập'} onClick={()=>userAction(u.id||u._id, u.status==='DISABLED'?'enable':'disable')}>{u.status==='DISABLED'?'Bật lại':'Vô hiệu hóa'}</button>
 													<button className="btn" title={u.status==='LOCKED'?'Cho phép đăng nhập trở lại':'Khóa tạm thời'} onClick={()=>userAction(u.id||u._id, u.status==='LOCKED'?'unlock':'lock')}>{u.status==='LOCKED'?'Mở khóa':'Khóa'}</button>
 													<button className="btn" title="Gửi lại thư mời kích hoạt (tạo token mới)" onClick={()=>userAction(u.id||u._id, 'invite')}>Gửi lại lời mời</button>
+													{u.status === 'DISABLED' && (
+														<button className="btn" style={{background:'#dc2626',color:'white'}} title="Xóa vĩnh viễn tài khoản đã vô hiệu hóa" onClick={()=>userAction(u.id||u._id, 'delete')}>Xóa</button>
+													)}
 											</td>
 										</tr>
 									))}
