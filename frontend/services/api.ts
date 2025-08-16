@@ -8,10 +8,22 @@ export async function feLog(message: string, meta?: any){
 	}catch{}
 }
 
+// Allow overriding baseURL via environment for production deployments
+{
+	const envBase = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, '');
+	if (envBase) {
+		api.defaults.baseURL = envBase;
+	}
+}
+
 api.interceptors.request.use((config)=>{
 	if (typeof window !== 'undefined'){
 		const token = localStorage.getItem('token');
-		if (token) config.headers = { ...(config.headers||{}), Authorization: `Bearer ${token}` };
+		if (token){
+			const headers = (config.headers || {}) as any;
+			headers['Authorization'] = `Bearer ${token}`;
+			config.headers = headers;
+		}
 	}
 	return config;
 });
@@ -27,14 +39,17 @@ api.interceptors.response.use(r => r, async (error) => {
 			const refresh_token = localStorage.getItem('refresh_token');
 			const user_id = localStorage.getItem('user_id');
 			if (refresh_token && user_id) {
-				const resp = await axios.post('/backend/auth/refresh', { user_id, refresh_token });
+				const base = (api.defaults.baseURL?.toString() || '').replace(/\/+$/, '');
+				const resp = await axios.post(`${base}/auth/refresh`, { user_id, refresh_token });
 				localStorage.setItem('token', resp.data.access_token);
 				localStorage.setItem('refresh_token', resp.data.refresh_token);
 				pending.forEach(fn => fn(resp.data.access_token));
 				pending = [];
 				isRefreshing = false;
 				const cfg = error.config;
-				cfg.headers = { ...(cfg.headers || {}), Authorization: `Bearer ${resp.data.access_token}` };
+				const hdrs = (cfg.headers || {}) as any;
+				hdrs['Authorization'] = `Bearer ${resp.data.access_token}`;
+				cfg.headers = hdrs;
 				return axios(cfg);
 			}
 		}catch(e){
@@ -45,7 +60,9 @@ api.interceptors.response.use(r => r, async (error) => {
 		return new Promise((resolve) => {
 			pending.push((t: string)=>{
 				const cfg = error.config;
-				cfg.headers = { ...(cfg.headers || {}), Authorization: `Bearer ${t}` };
+				const hdrs = (cfg.headers || {}) as any;
+				hdrs['Authorization'] = `Bearer ${t}`;
+				cfg.headers = hdrs;
 				resolve(axios(cfg));
 			});
 		});
