@@ -1,5 +1,6 @@
 import { prisma } from '../../../shared/config/database';
 import { audit } from '../../../shared/middlewares/audit';
+import { Prisma } from '@prisma/client';
 
 export class MaintenanceService {
   async listRepairs(query: any) {
@@ -26,7 +27,7 @@ export class MaintenanceService {
 
   async approveRepair(actor: any, id: string, manager_comment?: string) {
     // Transaction: minus inventory
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const ticket = await tx.repairTicket.findUnique({ where: { id }, include: { items: true } });
       if (!ticket) throw new Error('Phiếu không tồn tại');
       if (ticket.status !== 'PENDING_APPROVAL') throw new Error('Chỉ duyệt phiếu đang chờ duyệt');
