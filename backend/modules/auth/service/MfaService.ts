@@ -17,7 +17,7 @@ export class MfaService {
 		const last = await prisma.mfaSecret.findFirst({ where: { user_id: userId, type: 'TOTP' }, orderBy: { created_at: 'desc' } });
 		if (!last) return false;
 		// NOTE: For real use, replace with time-based OTP verification
-		return code && code.length >= 6;
+		return !!code && code.length >= 6;
 	}
 }
 

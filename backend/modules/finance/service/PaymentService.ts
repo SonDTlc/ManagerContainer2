@@ -1,5 +1,6 @@
 import { prisma } from '../../../shared/config/database';
 import { audit } from '../../../shared/middlewares/audit';
+import { Prisma } from '@prisma/client';
 
 function r2(n: number){ return Math.round(n*100)/100; }
 
@@ -11,7 +12,7 @@ export class PaymentService {
     }
     const sumAlloc = r2((payload.allocations||[]).reduce((s: number,a: any)=>s + Number(a.allocated_amount||0), 0));
     if (sumAlloc !== r2(Number(payload.amount))) throw new Error('INVALID_ALLOCATION');
-    const result = await prisma.$transaction(async (tx)=>{
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient)=>{
       const seq = Date.now()%100000; const ym = new Date(payload.paid_date).toISOString().slice(0,7).replace('-','');
       const pay = await tx.payment.create({ data: {
         org_id: actor.org_id || null,

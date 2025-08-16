@@ -22,7 +22,7 @@ export class ReportsRepository {
       },
       _sum: { total_amount: true }
     });
-    return rows.filter(r=>r.issue_date).map(r=>({ day: (r.issue_date as Date).toISOString().slice(0,10), revenue: Number(r._sum.total_amount || 0) }));
+    return rows.filter((r: any)=>r.issue_date).map((r: any)=>({ day: (r.issue_date as Date).toISOString().slice(0,10), revenue: Number(r._sum.total_amount || 0) }));
   }
 
   async paymentsByDay(range: DateRange, customerId?: string){
@@ -31,7 +31,7 @@ export class ReportsRepository {
       where: { paid_date: { gte: range.from ?? undefined, lte: range.to ?? undefined }, customer_id: customerId ?? undefined as any },
       _sum: { amount: true }
     });
-    return rows.map(r=>({ day: (r.paid_date as Date).toISOString().slice(0,10), amount: Number(r._sum.amount || 0) }));
+    return rows.map((r: any)=>({ day: (r.paid_date as Date).toISOString().slice(0,10), amount: Number(r._sum.amount || 0) }));
   }
 
   async requestsStatus(range: DateRange){
@@ -40,7 +40,7 @@ export class ReportsRepository {
       where: { createdAt: { gte: range.from ?? undefined, lte: range.to ?? undefined } },
       _count: { _all: true }
     });
-    return rows.map(r=>({ status: r.status, count: r._count._all }));
+    return rows.map((r: any)=>({ status: r.status, count: r._count._all }));
   }
 
   async yardUtilization(){
@@ -55,7 +55,7 @@ export class ReportsRepository {
       where: { createdAt: { gte: range.from ?? undefined, lte: range.to ?? undefined } },
       _count: { _all: true }
     });
-    return rows.map(r=>({ status: r.status, count: r._count._all }));
+    return rows.map((r: any)=>({ status: r.status, count: r._count._all }));
   }
 
   async arAging(asOf: Date, customerId?: string){
@@ -80,7 +80,7 @@ export class ReportsRepository {
       where.slotStatus = params.status;
     }
     // Join giữa ContainerMeta và vị trí hiện tại (YardSlot)
-    const raw = await prisma.$queryRawUnsafe<any[]>(
+    const raw = await prisma.$queryRawUnsafe(
       `
       SELECT cm.container_no,
              cm.dem_date, cm.det_date,
@@ -98,13 +98,13 @@ export class ReportsRepository {
       params.status ?? null,
       params.pageSize,
       (params.page-1) * params.pageSize
-    );
-    const total = (await prisma.$queryRawUnsafe<any[]>(
+    ) as any[];
+    const total = (await prisma.$queryRawUnsafe(
       `SELECT COUNT(*)::int as cnt FROM "ContainerMeta" cm LEFT JOIN "YardSlot" ys ON ys."occupant_container_no" = cm.container_no
        WHERE ($1::text IS NULL OR cm.container_no ILIKE '%'||$1||'%') AND ($2::text IS NULL OR ys.status = $2)`,
       params.q ?? null,
       params.status ?? null
-    ))[0]?.cnt || 0;
+    ) as any[])[0]?.cnt || 0;
     return { items: raw, total, page: params.page, pageSize: params.pageSize };
   }
 }
