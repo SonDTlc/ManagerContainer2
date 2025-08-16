@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -7,18 +7,29 @@ async function main(){
 	const email = 'admin@smartlog.local';
 	const password = 'Admin@1234';
 	const password_hash = await bcrypt.hash(password, 10);
-	await prisma.user.upsert({
-		where: { email },
-		update: {},
-		create: {
-			email,
-			full_name: 'System Admin',
-			role: 'SystemAdmin',
-			status: 'ACTIVE',
-			password_hash
+	// Ensure admin user exists and is ACTIVE; do not overwrite existing password if already set
+	const existing = await prisma.user.findUnique({ where: { email } });
+	if (!existing) {
+		await prisma.user.create({
+			data: {
+				email,
+				full_name: 'System Admin',
+				role: 'SystemAdmin',
+				status: 'ACTIVE',
+				password_hash
+			}
+		});
+		console.log('Seeded SystemAdmin user:', email);
+	} else {
+		const updates: Prisma.UserUpdateInput = {};
+		if (!existing.password_hash) { updates.password_hash = password_hash; }
+		if (existing.status !== 'ACTIVE') { updates.status = 'ACTIVE'; }
+		if ((existing.role as any) !== 'SystemAdmin') { (updates as any).role = 'SystemAdmin'; }
+		if (Object.keys(updates).length > 0) {
+			await prisma.user.update({ where: { id: existing.id }, data: updates });
+			console.log('Updated SystemAdmin user to ACTIVE');
 		}
-	});
-	console.log('Seeded SystemAdmin:', email, password);
+	}
 
 	// Seed minimal Yard layout for demo if missing
 	const yards = await prisma.yard.count();
